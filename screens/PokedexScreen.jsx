@@ -15,7 +15,7 @@ export default function PokedexScreen() {
   // Use the useInput hook to create a search input.
   // Call the result: search
   // ============================================================
-
+  const search = useInput('');
 
   // ============================================================
   // TODO 4
@@ -23,14 +23,14 @@ export default function PokedexScreen() {
   // Start with 'pikachu' as the default.
   // Destructure: data, loading, error, refetch
   // ============================================================
-
+  const { data, loading, error, refetch } = useFetch(`${BASE_URL}/pikachu`);
 
   // ============================================================
   // TODO 5
   // Declare a state variable called history (initial value: []).
   // This will store the names of Pokemon the user has searched.
   // ============================================================
-
+  const [history, setHistory] = useState([]);
 
   // ============================================================
   // TODO 6
@@ -41,7 +41,11 @@ export default function PokedexScreen() {
   // - Add search.value to history
   // ============================================================
   const handleSearch = () => {
-
+    if (search.value.trim()) {
+      const urlString = `${BASE_URL}/${search.value.toLowerCase().trim()}`;
+      refetch(urlString);
+      setHistory(prev => [...prev, search.value.toLowerCase().trim()]);
+    }
   };
 
   if (loading) return <ActivityIndicator size="large" style={styles.center} />;
@@ -56,6 +60,7 @@ export default function PokedexScreen() {
       {/* Add a Search button that calls handleSearch */}
       <View style={styles.searchRow}>
         <TextInput
+          {...search}
           style={styles.input}
           placeholder="Enter Pokemon name..."
         />
@@ -70,7 +75,10 @@ export default function PokedexScreen() {
       {/* - HP: data?.stats?.[0]?.base_stat */}
       {data && (
         <View style={styles.card}>
-
+          <Text style={styles.pokemonName}>{data?.name}</Text>
+          <Image source={{ uri: data?.sprites?.front_default }} style={styles.image} />
+          <Text style={styles.pokemonType}>Type: {data?.types?.[0]?.type?.name}</Text>
+          <Text style={styles.pokemonHp}>HP: {data?.stats?.[0]?.base_stat}</Text>
         </View>
       )}
 
@@ -80,6 +88,14 @@ export default function PokedexScreen() {
       {/* keyExtractor: (item, index) => String(index) */}
       {/* ListEmptyComponent: show "No searches yet" */}
       <Text style={styles.historyHeading}>Search History</Text>
+      <FlatList 
+        data={history}
+        keyExtractor={(item, index) => String(index)}
+        ListEmptyComponent={<Text style={styles.empty}>No searches yet</Text>}
+        renderItem={({item}) => (
+          <Text style={styles.historyItem}>{item}</Text>
+        )}
+      />
 
     </View>
   );
